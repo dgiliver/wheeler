@@ -215,44 +215,145 @@ python run_fast_backtest.py
 
 ## ☁️ Deploy to AWS (Run 24/7)
 
-Run the bot continuously on AWS EC2 for ~$0/month (free tier).
+Run the bot continuously on AWS EC2 for ~$0/month (free tier) with secure secrets management.
 
-### Quick Deploy
+### Cost Estimate
+
+| Component | Cost |
+|-----------|------|
+| EC2 t3.micro | **$0** (free tier 12 months) |
+| Secrets Manager | ~$0.40/mo |
+| **Total** | **~$0.40/mo** |
+
+---
+
+### Step 1: Store Secrets in AWS Secrets Manager
+
+1. Go to **AWS Console** → **Secrets Manager** → **Store a new secret**
+2. Choose **"Other type of secret"**
+3. Add key/value pairs:
+
+| Key | Value |
+|-----|-------|
+| `ALPACA_PAPER_API_KEY` | Your Alpaca paper API key |
+| `ALPACA_PAPER_API_SECRET` | Your Alpaca paper API secret |
+| `ALPACA_PAPER_BASE_URL` | `https://paper-api.alpaca.markets` |
+
+4. Name it: `wheeler_paper`
+5. Click **Store** and save the ARN (e.g., `arn:aws:secretsmanager:us-east-1:123456789:secret:wheeler_paper-AbCdEf`)
+
+---
+
+### Step 2: Create IAM Policy
+
+1. Go to **IAM** → **Policies** → **Create policy**
+2. Click **JSON** tab and paste:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": ["secretsmanager:GetSecretValue"],
+      "Resource": "arn:aws:secretsmanager:us-east-1:*:secret:wheeler_*"
+    }
+  ]
+}
+```
+
+3. Name it: `WheelerSecretsAccess`
+4. Click **Create policy**
+
+---
+
+### Step 3: Create IAM Role
+
+1. Go to **IAM** → **Roles** → **Create role**
+2. Select **AWS service** → **EC2**
+3. Attach the policy: `WheelerSecretsAccess`
+4. Name it: `wheeler-ec2-role`
+5. Click **Create role**
+
+---
+
+### Step 4: Launch EC2 Instance
+
+1. Go to **EC2** → **Launch Instance**
+2. Configure:
+
+| Setting | Value |
+|---------|-------|
+| Name | `wheeler-bot` |
+| AMI | Amazon Linux 2023 |
+| Instance type | `t3.micro` (free tier) |
+| Key pair | Create new or use existing |
+| Security group | Allow SSH (port 22) |
+| IAM instance profile | `wheeler-ec2-role` |
+
+3. Click **Launch instance**
+
+---
+
+### Step 5: Setup Wheeler on EC2
 
 ```bash
-# SSH into your EC2 instance
-ssh -i your-key.pem ec2-user@your-ec2-ip
+# SSH into your instance
+ssh -i your-key.pem ec2-user@YOUR_EC2_PUBLIC_IP
 
-# Setup
+# Update system and install dependencies
 sudo dnf update -y
 sudo dnf install python3.11 python3.11-pip git -y
+
+# Clone the repo
 git clone https://github.com/dgiliver/wheeler.git
 cd wheeler
+
+# Create virtual environment
 python3.11 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
+pip install boto3
+```
 
-# Create startup script
-cat > start_bot.sh << 'EOF'
+---
+
+### Step 6: Create Startup Script
+
+```bash
+cat > ~/wheeler/start_bot.sh << 'EOF'
 #!/bin/bash
 cd /home/ec2-user/wheeler
 source .venv/bin/activate
-export ALPACA_PAPER_API_KEY="your_key"
-export ALPACA_PAPER_API_SECRET="your_secret"
-export ALPACA_PAPER_BASE_URL="https://paper-api.alpaca.markets"
+export PYTHONPATH="/home/ec2-user/wheeler:$PYTHONPATH"
+
+# Load secrets from AWS Secrets Manager
+eval $(python3 -c "
+import boto3, json
+client = boto3.client('secretsmanager', region_name='us-east-1')
+secret = json.loads(client.get_secret_value(SecretId='wheeler_paper')['SecretString'])
+for k,v in secret.items(): print(f'export {k}=\"{v}\"')
+")
+
 exec python3 src/main.py --config config/wheel_10k_paper.yml
 EOF
-chmod +x start_bot.sh
+chmod +x ~/wheeler/start_bot.sh
+```
 
-# Create systemd service
+---
+
+### Step 7: Create Systemd Service
+
+```bash
 sudo tee /etc/systemd/system/wheeler.service << 'EOF'
 [Unit]
-Description=Wheeler Bot
+Description=Wheeler Options Trading Bot
 After=network.target
 
 [Service]
 Type=simple
 User=ec2-user
+WorkingDirectory=/home/ec2-user/wheeler
 ExecStart=/home/ec2-user/wheeler/start_bot.sh
 Restart=always
 RestartSec=30
@@ -261,17 +362,45 @@ RestartSec=30
 WantedBy=multi-user.target
 EOF
 
-# Start
+# Enable and start
 sudo systemctl daemon-reload
 sudo systemctl enable wheeler
 sudo systemctl start wheeler
-
-# Check status
-sudo systemctl status wheeler
-journalctl -u wheeler -f
 ```
 
-For secure secrets management with AWS Secrets Manager, see [DEPLOYMENT.md](DEPLOYMENT.md).
+---
+
+### Step 8: Verify It's Running
+
+```bash
+# Check status
+sudo systemctl status wheeler
+
+# View live logs
+journalctl -u wheeler -f
+
+# Quick commands
+sudo systemctl stop wheeler    # Stop
+sudo systemctl restart wheeler # Restart
+```
+
+---
+
+### Step 9: Setup GitHub Auto-Deploy (Optional)
+
+For automatic deployments when you push to main:
+
+1. Go to **GitHub** → **Your repo** → **Settings** → **Secrets and variables** → **Actions**
+2. Add these secrets:
+
+| Secret | Value |
+|--------|-------|
+| `EC2_HOST` | Your EC2 public IP |
+| `EC2_SSH_KEY` | Contents of your `.pem` file |
+
+3. Update EC2 Security Group to allow SSH from `0.0.0.0/0` (for GitHub Actions)
+
+Now every merge to `main` will automatically deploy to your EC2!
 
 ---
 
