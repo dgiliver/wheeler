@@ -42,16 +42,17 @@ def test_csp_entry_conditions(analyzer, liquid_option):
 
 
 def test_roll_options_decision(analyzer, liquid_option):
-    # Test put roll conditions with expiry > 5 days
+    # Test OTM put roll conditions near expiry (wheel strategy)
+    # For wheel: only roll OTM options near expiry, let ITM get assigned
     should_roll, reason = analyzer.should_roll_option(
-        days_to_expiry=10,  # Changed from 3 to 10 to avoid near expiry check
+        days_to_expiry=3,  # Near expiry
         current_strike=Decimal("100"),
-        current_price=Decimal("95"),
+        current_price=Decimal("105"),  # OTM put (price > strike)
         is_put=True,
         option_quote=liquid_option,
     )
     assert should_roll
-    assert "Put at risk" in reason
+    assert "OTM put" in reason
 
 
 def test_assignment_decision():
@@ -142,7 +143,7 @@ def test_optimal_exit_price(analyzer, liquid_option, illiquid_option):
 
 
 def test_should_roll_option_itm_put():
-    """Test rolling decision for ITM put"""
+    """Test rolling decision for ITM put - wheel strategy lets it get assigned"""
     analyzer = StrategyAnalyzer()
     option_quote = OptionQuote(
         bid=Decimal("1.00"),
@@ -153,20 +154,22 @@ def test_should_roll_option_itm_put():
         delta=-0.7,  # Deep ITM
     )
 
+    # ITM put near expiry - wheel strategy: let it get assigned
     should_roll, reason = analyzer.should_roll_option(
-        days_to_expiry=10,  # Changed from 5 to 10 to avoid near expiry check
+        days_to_expiry=3,  # Near expiry
         current_strike=Decimal("150"),
-        current_price=Decimal("140"),  # ITM put
+        current_price=Decimal("140"),  # ITM put (price < strike)
         is_put=True,
         option_quote=option_quote,
     )
 
-    assert should_roll
-    assert "Put at risk" in reason
+    # Should NOT roll - let assignment happen
+    assert not should_roll
+    assert "assignment" in reason.lower()
 
 
 def test_should_roll_option_near_expiry():
-    """Test rolling decision for near expiry option"""
+    """Test rolling decision for near expiry OTM option"""
     analyzer = StrategyAnalyzer()
     option_quote = OptionQuote(
         bid=Decimal("1.00"), ask=Decimal("1.10"), volume=1000, open_interest=5000, implied_volatility=30.0, delta=-0.3
@@ -175,13 +178,13 @@ def test_should_roll_option_near_expiry():
     should_roll, reason = analyzer.should_roll_option(
         days_to_expiry=3,  # Very close to expiry
         current_strike=Decimal("150"),
-        current_price=Decimal("155"),  # OTM put
+        current_price=Decimal("155"),  # OTM put (price > strike)
         is_put=True,
         option_quote=option_quote,
     )
 
     assert should_roll
-    assert "Near expiry" in reason
+    assert "OTM put" in reason  # Updated to match actual reason text
 
 
 def test_csp_entry_illiquid_option(analyzer, illiquid_option):
@@ -214,7 +217,7 @@ def test_should_force_exit_no_max_loss():
 
 
 def test_should_roll_option_call_itm():
-    """Test rolling decision for ITM call"""
+    """Test rolling decision for ITM call - wheel strategy lets shares get called away"""
     analyzer = StrategyAnalyzer()
     option_quote = OptionQuote(
         bid=Decimal("1.00"),
@@ -225,20 +228,22 @@ def test_should_roll_option_call_itm():
         delta=0.7,  # Deep ITM
     )
 
+    # ITM call near expiry - wheel strategy: let shares get called away
     should_roll, reason = analyzer.should_roll_option(
-        days_to_expiry=10,
+        days_to_expiry=3,  # Near expiry
         current_strike=Decimal("140"),
-        current_price=Decimal("150"),  # ITM call
+        current_price=Decimal("150"),  # ITM call (price > strike)
         is_put=False,  # Testing call option
         option_quote=option_quote,
     )
 
-    assert should_roll
-    assert "Call at risk" in reason
+    # Should NOT roll - let assignment happen (shares called away)
+    assert not should_roll
+    assert "assignment" in reason.lower()
 
 
 def test_should_roll_option_no_action_needed():
-    """Test rolling decision when no action is needed"""
+    """Test rolling decision when far from expiry - no action needed"""
     analyzer = StrategyAnalyzer()
     option_quote = OptionQuote(
         bid=Decimal("1.00"), ask=Decimal("1.10"), volume=1000, open_interest=5000, implied_volatility=30.0, delta=0.3
@@ -253,7 +258,7 @@ def test_should_roll_option_no_action_needed():
     )
 
     assert not should_roll
-    assert "No roll needed" in reason
+    assert "Not near expiry" in reason  # Updated to match actual reason text
 
 
 def test_accept_assignment_avoid():

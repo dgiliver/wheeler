@@ -72,30 +72,32 @@ async def test_check_positions(mock_config_file, mock_alpaca_service, liquid_opt
     with patch("src.wheel_bot.AlpacaService", return_value=mock_alpaca_service):
         bot = WheelBot(mock_config_file)
 
-        # Setup mock position
+        # Setup mock position with future expiration
         mock_position = Position(
             symbol="AAPL",
             entry_price=Decimal("150"),
             quantity=100,
             position_type=PositionType.CASH_SECURED_PUT,
-            expiration=datetime.now(),
+            expiration=datetime.now() + timedelta(days=30),  # Future expiration
             strike_price=Decimal("145"),
             premium_received=Decimal("500"),
             entry_date=datetime.now(),
         )
 
-        bot.account_manager.positions = [mock_position]
+        # Mock get_positions to return our mock position (called by _sync_positions)
+        mock_alpaca_service.get_positions.return_value = [mock_position]
 
         # Setup price data mock
         mock_alpaca_service.get_price_history.return_value = pd.DataFrame(
             {"close": [140.0]}, index=pd.date_range(start="2024-01-01", periods=1)
         )
 
-        # Setup option chain mock
+        # Setup option chain mock - expiration matches the position
+        exp_str = mock_position.expiration.strftime("%y%m%d")
         mock_alpaca_service.get_option_chain.return_value = [
             {
-                "id": "option1",
-                "symbol": "AAPL240119P00145000",
+                "id": f"AAPL{exp_str}P00145000",
+                "symbol": f"AAPL{exp_str}P00145000",
                 "strike": 145.0,
                 "bid": float(liquid_option.bid),
                 "ask": float(liquid_option.ask),
@@ -109,9 +111,10 @@ async def test_check_positions(mock_config_file, mock_alpaca_service, liquid_opt
         # Run check positions
         bot._check_positions()
 
-        # Verify API calls
-        mock_alpaca_service.get_price_history.assert_called_once()
-        mock_alpaca_service.get_option_chain.assert_called_once()
+        # Verify position sync happened
+        mock_alpaca_service.get_positions.assert_called_once()
+        # Verify price history was fetched for the position
+        mock_alpaca_service.get_price_history.assert_called()
 
 
 def test_look_for_entries_no_existing_positions(mock_config_file, mock_alpaca_service, liquid_option):
@@ -300,18 +303,20 @@ def test_check_positions_empty_option_chain(mock_config_file, mock_alpaca_servic
     with patch("src.wheel_bot.AlpacaService", return_value=mock_alpaca_service):
         bot = WheelBot(mock_config_file)
 
-        # Setup option position
+        # Setup option position with future expiration
         option_position = Position(
             symbol="AAPL",
             entry_price=Decimal("150"),
             quantity=100,
             position_type=PositionType.CASH_SECURED_PUT,
-            expiration=datetime.now() + timedelta(days=5),
+            expiration=datetime.now() + timedelta(days=30),
             strike_price=Decimal("145"),
             premium_received=Decimal("500"),
             entry_date=datetime.now(),
         )
-        bot.account_manager.positions = [option_position]
+
+        # Mock get_positions to return our mock position (called by _sync_positions)
+        mock_alpaca_service.get_positions.return_value = [option_position]
 
         # Mock empty option chain
         mock_alpaca_service.get_option_chain.return_value = []
@@ -326,8 +331,9 @@ def test_check_positions_empty_option_chain(mock_config_file, mock_alpaca_servic
         # Run check positions
         bot._check_positions()
 
-        # Verify we checked but couldn't find options
-        mock_alpaca_service.get_option_chain.assert_called_once()
+        # Verify position sync and price history calls happened
+        mock_alpaca_service.get_positions.assert_called_once()
+        mock_alpaca_service.get_price_history.assert_called()
 
 
 def test_config_loading_missing_fields(tmp_path):

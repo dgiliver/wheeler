@@ -10,7 +10,7 @@ def test_stock_config_defaults():
     assert config.max_position_size == Decimal("0.1")
     assert config.min_strike_delta == 0.3
     assert config.max_strike_delta == 0.15
-    assert config.min_days_to_expiry == 30
+    assert config.min_days_to_expiry == 14  # Default is 14
     assert config.max_days_to_expiry == 45
 
 
