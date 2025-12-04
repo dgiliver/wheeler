@@ -320,6 +320,8 @@ pip install boto3
 
 ### Step 6: Create Startup Script
 
+> **Note:** If you set up GitHub Actions auto-deploy (Step 9), the deploy workflow will automatically regenerate this script with the config specified in `.github/workflows/deploy.yml`. You only need to create it manually for the initial setup.
+
 ```bash
 cat > ~/wheeler/start_bot.sh << 'EOF'
 #!/bin/bash
@@ -339,6 +341,8 @@ exec python3 src/main.py --config config/wheel_10k_paper.yml
 EOF
 chmod +x ~/wheeler/start_bot.sh
 ```
+
+**To change the config later:** Edit `WHEELER_CONFIG` in `.github/workflows/deploy.yml` and merge to main. The next deploy will update the startup script automatically.
 
 ---
 
