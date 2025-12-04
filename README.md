@@ -27,7 +27,7 @@ cp .env.example .env
 # Edit .env with your Alpaca API keys
 
 # Run (paper trading)
-python src/main.py --config config/wheel_10k_optimized.yml
+python src/main.py --config config/wheel_10k_paper.yml
 ```
 
 ---
@@ -130,7 +130,7 @@ ALPACA_LIVE_API_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ALPACA_LIVE_BASE_URL=https://api.alpaca.markets
 ```
 
-### 2. Strategy Config (`config/wheel_10k_optimized.yml`)
+### 2. Strategy Config (`config/wheel_10k_paper.yml`)
 
 ```yaml
 environment: paper  # 'paper' or 'live'
@@ -180,7 +180,7 @@ watchlist:
 
 ```bash
 # Start the bot
-python src/main.py --config config/wheel_10k_optimized.yml
+python src/main.py --config config/wheel_10k_paper.yml
 
 # Watch the logs
 tail -f wheel_bot.log
@@ -240,7 +240,7 @@ source .venv/bin/activate
 export ALPACA_PAPER_API_KEY="your_key"
 export ALPACA_PAPER_API_SECRET="your_secret"
 export ALPACA_PAPER_BASE_URL="https://paper-api.alpaca.markets"
-exec python3 src/main.py --config config/wheel_10k_optimized.yml
+exec python3 src/main.py --config config/wheel_10k_paper.yml
 EOF
 chmod +x start_bot.sh
 
@@ -314,7 +314,7 @@ def should_sell_call():
 ```
 wheeler/
 ├── config/                     # Strategy configurations
-│   ├── wheel_10k_optimized.yml # $10k account config
+│   ├── wheel_10k_paper.yml  # Paper trading config ($10k)
 │   └── wheel_strategy_OLD.yml  # Legacy config
 ├── src/
 │   ├── analysis/               # Strategy logic
