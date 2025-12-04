@@ -12,9 +12,17 @@ An automated options trading bot that implements the **Wheel Strategy** on [Alpa
 
 ## ⚡ Quick Start (5 minutes)
 
+> ⚠️ **Important:** Fork this repo first! Don't clone directly - you'll want your own copy to customize configs and deploy to your own AWS account.
+
+### 1. Fork the Repository
+
+Click the **"Fork"** button at the top right of this page to create your own copy.
+
+### 2. Clone Your Fork
+
 ```bash
-# Clone
-git clone https://github.com/dgiliver/wheeler.git
+# Clone YOUR fork (replace YOUR_USERNAME)
+git clone https://github.com/YOUR_USERNAME/wheeler.git
 cd wheeler
 
 # Setup
@@ -90,8 +98,8 @@ The Wheel is a systematic, income-generating options strategy:
 ### Option 1: Local Development
 
 ```bash
-# Clone the repository
-git clone https://github.com/dgiliver/wheeler.git
+# Fork first, then clone YOUR fork (replace YOUR_USERNAME)
+git clone https://github.com/YOUR_USERNAME/wheeler.git
 cd wheeler
 
 # Create virtual environment
@@ -449,8 +457,8 @@ ssh -i your-key.pem ec2-user@YOUR_EC2_PUBLIC_IP
 sudo dnf update -y
 sudo dnf install python3.11 python3.11-pip git -y
 
-# Clone the repo
-git clone https://github.com/dgiliver/wheeler.git
+# Clone YOUR fork (replace YOUR_USERNAME)
+git clone https://github.com/YOUR_USERNAME/wheeler.git
 cd wheeler
 
 # Create virtual environment
