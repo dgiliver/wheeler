@@ -161,16 +161,114 @@ watchlist:
     max_strike_delta: 0.35
 ```
 
-### Key Parameters Explained
+### Complete Config Reference
 
-| Parameter | Description | Recommended |
-|-----------|-------------|-------------|
-| `rsi_threshold` | Only enter when RSI below this | 40-50 |
-| `min_strike_delta` | Minimum option delta | 0.20-0.30 |
-| `max_strike_delta` | Maximum option delta | 0.30-0.40 |
-| `min_days_to_expiry` | Minimum DTE | 25-35 |
-| `max_days_to_expiry` | Maximum DTE | 45-60 |
-| `take_profit_pct` | Close position at X% profit | 0.50-0.65 |
+#### Global Settings
+
+| Parameter | Type | Description | Example |
+|-----------|------|-------------|---------|
+| `environment` | string | `paper` or `live` | `paper` |
+| `max_capital` | number | Max capital to use (ignores Alpaca balance above this) | `10000` |
+| `max_contracts_per_symbol` | number | Safety limit per stock | `1` |
+| `rsi_threshold` | number | RSI must be below this to enter | `45` |
+| `take_profit_pct` | number | Close position when this % of max profit reached | `0.50` |
+| `default_position_size` | number | Default % of capital per position | `0.25` |
+
+#### Per-Symbol Settings (Watchlist)
+
+| Parameter | Type | Description | Example |
+|-----------|------|-------------|---------|
+| `symbol` | string | Stock ticker | `PLTR` |
+| `max_position_size` | number | Max % of capital for this stock | `0.25` |
+| `min_strike_delta` | number | Minimum delta for option selection | `0.25` |
+| `max_strike_delta` | number | Maximum delta for option selection | `0.35` |
+| `min_days_to_expiry` | number | Minimum days until expiration | `25` |
+| `max_days_to_expiry` | number | Maximum days until expiration | `45` |
+| `is_high_iv` | boolean | Flag for high volatility stocks | `true` |
+
+#### Polling Settings
+
+| Parameter | Type | Description | Example |
+|-----------|------|-------------|---------|
+| `market_hours_interval` | number | Seconds between checks during market hours | `60` |
+| `after_hours_interval` | number | Seconds between checks after hours | `300` |
+| `check_premarket` | boolean | Monitor pre-market (4 AM - 9:30 AM ET) | `false` |
+| `check_afterhours` | boolean | Monitor after-hours (4 PM - 8 PM ET) | `false` |
+
+---
+
+## 📈 Understanding the Strategy
+
+### RSI (Relative Strength Index)
+
+RSI measures whether a stock is **overbought** or **oversold** on a scale of 0-100.
+
+```
+RSI < 30  → Oversold (stock may be undervalued) ✅ Strong buy signal
+RSI 30-45 → Moderately oversold ✅ Good entry zone
+RSI 45-55 → Neutral ⚠️ Proceed with caution
+RSI 55-70 → Moderately overbought ❌ Avoid new positions
+RSI > 70  → Overbought (stock may be overvalued) ❌ Don't enter
+```
+
+**How Wheeler uses RSI:**
+- Only sells puts when RSI < `rsi_threshold`
+- Default threshold is 45 (moderate, more opportunities)
+- Lower threshold (30-35) = fewer but higher-conviction entries
+- Higher threshold (45-50) = more entries in trending markets
+
+### Delta (Option Greek)
+
+Delta measures how much an option's price moves relative to the stock.
+
+```
+Delta 0.50 = ATM (At The Money) - highest premium, 50% assignment chance
+Delta 0.30 = OTM (Out of Money) - moderate premium, 30% assignment chance ✅
+Delta 0.20 = Far OTM - lower premium, 20% assignment chance
+Delta 0.10 = Very far OTM - minimal premium, 10% assignment chance
+```
+
+**For puts (negative delta):**
+- `-0.30 delta` = 30% chance of assignment
+- Strike is ~30% probability of being ITM at expiration
+
+**Recommended ranges:**
+| Strategy | Delta Range | Risk/Reward |
+|----------|-------------|-------------|
+| Conservative | 0.15-0.25 | Lower premium, lower assignment risk |
+| **Balanced** | **0.25-0.35** | **Good premium, reasonable risk** ✅ |
+| Aggressive | 0.35-0.45 | Higher premium, higher assignment risk |
+
+### Days to Expiry (DTE)
+
+Time until the option expires.
+
+```
+7-14 DTE  → High theta decay, but risky if stock moves against you
+21-30 DTE → Sweet spot for theta decay ✅
+30-45 DTE → Standard wheel timeframe ✅ (recommended)
+45-60 DTE → Slower decay, more time for stock to move
+```
+
+**Why 30-45 DTE?**
+- Options lose value fastest in the last 30 days (theta decay)
+- Enough time to roll if needed
+- Good premium collection
+
+### Take Profit
+
+Close positions early when a certain % of max profit is reached.
+
+```
+Option sold for $1.00 premium
+At 50% take profit: Close when option worth $0.50
+Profit: $0.50 per contract ($50 total)
+```
+
+**Why take profit early?**
+- Lock in gains, don't risk reversal
+- Free up capital for new trades
+- 50% of max profit in 30% of time = good deal
 
 ---
 
@@ -186,21 +284,67 @@ python src/main.py --config config/wheel_10k_paper.yml
 tail -f wheel_bot.log
 ```
 
-### Backtesting
+---
 
-Test how the strategy would have performed historically:
+## 🧪 Backtesting
+
+Test how the strategy would have performed historically before risking real money.
+
+### Quick Backtest
 
 ```bash
-# Basic backtest
+# Basic backtest - 1 year
 python -m src.backtesting.run_backtest \
   --start-date 2023-01-01 \
   --end-date 2024-01-01 \
   --capital 10000 \
   --rsi 45
+```
 
-# Comprehensive backtest with multiple configurations
+### Backtest Options
+
+| Flag | Description | Example |
+|------|-------------|---------|
+| `--start-date` | Start date (YYYY-MM-DD) | `2023-01-01` |
+| `--end-date` | End date (YYYY-MM-DD) | `2024-01-01` |
+| `--capital` | Starting capital | `10000` |
+| `--rsi` | RSI threshold | `45` |
+| `--symbols` | Stocks to test (comma-separated) | `PLTR,F,SOFI` |
+| `--debug` | Verbose output | (flag) |
+
+### Comprehensive Backtest
+
+Run multiple configurations and compare results:
+
+```bash
 python run_fast_backtest.py
 ```
+
+This tests various RSI thresholds and generates a comparison report.
+
+### Interpreting Results
+
+| Metric | Good | Excellent |
+|--------|------|-----------|
+| Annual Return | >10% | >20% |
+| Win Rate | >60% | >75% |
+| Max Drawdown | <15% | <10% |
+| Sharpe Ratio | >1.0 | >1.5 |
+
+### Sample Backtest Output
+
+```
+Backtest Results (2023-01-01 to 2024-01-01)
+==========================================
+Starting Capital: $10,000
+Ending Capital:   $11,850
+Total Return:     18.5%
+Win Rate:         76%
+Total Trades:     42
+Max Drawdown:     8.2%
+```
+
+---
 
 ### Live Trading
 
@@ -517,6 +661,80 @@ Backtesting results on select stocks (2022-2024):
 | SOFI  | ~12-22%      | ~15%         | ~72%     |
 
 *Past performance does not guarantee future results.*
+
+---
+
+## 🎓 Getting Started Guide (Newcomers)
+
+If you're new to options or the wheel strategy, follow this path:
+
+### Week 1-2: Learn & Backtest
+
+1. **Read this README** - Understand RSI, delta, and the wheel strategy
+2. **Run backtests** on different stocks and RSI settings:
+   ```bash
+   python run_fast_backtest.py
+   ```
+3. **Study the results** - Which stocks perform best? What RSI works?
+
+### Week 3-4: Paper Trade
+
+1. **Set up Alpaca paper account** - [Sign up free](https://alpaca.markets/)
+2. **Configure your watchlist** - Start with 2-3 stocks you understand
+3. **Run the bot locally:**
+   ```bash
+   python src/main.py --config config/wheel_10k_paper.yml
+   ```
+4. **Monitor daily** - Check logs, understand why trades happen
+
+### Month 2: Refine
+
+1. **Adjust RSI threshold** - Too many trades? Lower it. Too few? Raise it.
+2. **Tune delta range** - More conservative? Lower delta. More aggressive? Higher.
+3. **Add/remove stocks** - Keep winners, drop losers
+
+### Month 3+: Consider Live (Optional)
+
+1. **Deploy to AWS** - Run 24/7 without your laptop
+2. **Start with small capital** - Even if you have more
+3. **Monitor closely** - First few weeks are critical
+
+---
+
+## 💡 Tips & Best Practices
+
+### Stock Selection
+
+✅ **Good wheel candidates:**
+- Stocks you'd happily own at lower prices
+- $5-50 price range (affordable for small accounts)
+- Decent options volume (>1000 daily)
+- Moderate volatility (not meme stocks)
+
+❌ **Avoid:**
+- Stocks in downtrends (you'll get assigned and stuck)
+- Low volume options (wide spreads eat profits)
+- Earnings week (IV crush after announcement)
+- Meme stocks (unpredictable)
+
+### Position Sizing
+
+| Account Size | Max Per Position | Example |
+|--------------|------------------|---------|
+| $5,000 | 20-25% | $1,000-1,250 |
+| $10,000 | 15-20% | $1,500-2,000 |
+| $25,000 | 10-15% | $2,500-3,750 |
+| $50,000+ | 5-10% | $2,500-5,000 |
+
+**Rule:** Never put more than 25% in one position.
+
+### When NOT to Trade
+
+- 🚫 Earnings announcements (within 1 week)
+- 🚫 Major Fed meetings
+- 🚫 Stock in strong downtrend
+- 🚫 RSI already high (>50)
+- 🚫 Wide bid-ask spreads (>$0.20)
 
 ---
 
