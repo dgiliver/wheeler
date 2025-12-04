@@ -3,6 +3,8 @@ name: Deploy Wheeler Bot
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:  # Manual trigger
 
 jobs:

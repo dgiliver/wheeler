@@ -406,18 +406,17 @@ def test_missing_env_vars(mock_config_file):
             WheelBot(mock_config_file)
 
 
-@pytest.mark.asyncio
-async def test_run_error_handling(mock_config_file, mock_alpaca_service, caplog):
+def test_run_error_handling(mock_config_file, mock_alpaca_service, caplog):
     """Test error handling in main run loop"""
     with patch("src.wheel_bot.AlpacaService", return_value=mock_alpaca_service):
         bot = WheelBot(mock_config_file)
 
-        # Make check_positions raise an error
-        mock_alpaca_service.get_price_history.side_effect = Exception("API Error")
-
-        # Run one iteration
-        with patch("time.sleep") as mock_sleep:
-            mock_sleep.side_effect = [None, KeyboardInterrupt]  # Run once then stop
+        # Make _check_positions raise an error and mock sleep to break out of loop
+        with (
+            patch.object(bot, "_check_positions", side_effect=Exception("API Error")),
+            patch("src.wheel_bot.time_module.sleep", side_effect=[None, KeyboardInterrupt]),
+            pytest.raises(KeyboardInterrupt),
+        ):
             bot.run()
 
         assert "Error in main loop" in caplog.text
