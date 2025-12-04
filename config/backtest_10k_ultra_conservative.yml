@@ -1,0 +1,37 @@
+# Wheel Strategy Backtest Config - ULTRA CONSERVATIVE Delta (0.10-0.20)
+# Lower premium, very low assignment risk
+
+environment: paper
+
+watchlist:
+  - symbol: PLTR
+    max_position_size: 0.7
+    min_strike_delta: 0.10
+    max_strike_delta: 0.20
+    
+  - symbol: SOFI
+    max_position_size: 0.15
+    min_strike_delta: 0.10
+    max_strike_delta: 0.20
+    
+  - symbol: F
+    max_position_size: 0.15
+    min_strike_delta: 0.10
+    max_strike_delta: 0.20
+    
+  - symbol: INTC
+    max_position_size: 0.25
+    min_strike_delta: 0.10
+    max_strike_delta: 0.20
+    
+  - symbol: BAC
+    max_position_size: 0.45
+    min_strike_delta: 0.10
+    max_strike_delta: 0.20
+
+default_position_size: 0.25
+
+polling:
+  market_hours_interval: 60
+  after_hours_interval: 300
+

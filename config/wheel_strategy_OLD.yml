@@ -1,0 +1,38 @@
+environment: paper  # Specify paper trading
+
+default_position_size: 0.2  # 20% of account per position max
+
+# Pattern Day Trader (PDT) Rules
+pdt:
+  threshold: 25000  # PDT rules apply when account equity is below this
+  max_day_trades: 3  # Maximum day trades allowed in rolling 5-day period
+  warn_at: 2  # Warn when day trade count reaches this number
+
+polling:
+  market_hours_interval: 60  # Check every minute during market hours
+  after_hours_interval: 300  # Check every 5 minutes outside market hours
+  check_premarket: true
+  check_afterhours: true
+
+watchlist:
+  # Delta range: min_strike_delta is the LOWER bound, max_strike_delta is the UPPER bound
+  # For puts, delta is negative (-0.30 means 30 delta put), we use absolute values
+  # Position sizes set to afford 1 contract at typical strike prices
+    
+  - symbol: "AMD"
+    max_position_size: 0.30   # ~$25k for 1 contract at $210 strike
+    min_strike_delta: 0.20
+    max_strike_delta: 0.40
+    min_days_to_expiry: 30
+    max_days_to_expiry: 45
+
+  # High-IV Tickers - Use lower delta, smaller size, shorter duration
+  - symbol: "NVDA"
+    max_position_size: 0.20   # ~$20k for 1 contract at $140-170 strike
+    min_strike_delta: 0.12
+    max_strike_delta: 0.25
+    min_days_to_expiry: 14
+    max_days_to_expiry: 28
+    take_profit_pct: 50.0
+    is_high_iv: true
+    

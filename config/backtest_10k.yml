@@ -1,0 +1,38 @@
+# Wheel Strategy Backtest Config for $10k Account
+# Good candidates: $20-80 stocks with high IV and liquid options
+
+environment: paper
+
+# Conservative Delta (0.20-0.30) - Lower premium, less assignment risk
+watchlist:
+  - symbol: PLTR    # Palantir - High IV tech, ~$60-70
+    max_position_size: 0.7
+    min_strike_delta: 0.20
+    max_strike_delta: 0.30
+    
+  - symbol: SOFI    # SoFi - Fintech, ~$13-15, very affordable
+    max_position_size: 0.15
+    min_strike_delta: 0.20
+    max_strike_delta: 0.30
+    
+  - symbol: F       # Ford - Auto, ~$10-12, very affordable
+    max_position_size: 0.15
+    min_strike_delta: 0.20
+    max_strike_delta: 0.30
+    
+  - symbol: INTC    # Intel - Beaten down chip, ~$20-25
+    max_position_size: 0.25
+    min_strike_delta: 0.20
+    max_strike_delta: 0.30
+    
+  - symbol: BAC     # Bank of America - Stable bank, ~$40
+    max_position_size: 0.45
+    min_strike_delta: 0.20
+    max_strike_delta: 0.30
+
+default_position_size: 0.25
+
+polling:
+  market_hours_interval: 60
+  after_hours_interval: 300
+
