@@ -6,6 +6,15 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:  # Manual trigger
+    inputs:
+      config:
+        description: 'Config file to use'
+        required: false
+        default: 'config/wheel_10k_optimized.yml'
+
+# Default config - change this to switch configs
+env:
+  WHEELER_CONFIG: config/wheel_10k_optimized.yml
 
 jobs:
   test:
@@ -40,11 +49,34 @@ jobs:
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
           command_timeout: 5m
+          envs: WHEELER_CONFIG
           script: |
             set -e
             cd ~/wheeler
+
+            # Use input config if provided, otherwise use env default
+            CONFIG="${WHEELER_CONFIG:-config/wheel_10k_optimized.yml}"
+            echo "📋 Using config: $CONFIG"
+
             echo "📥 Pulling latest code..."
             git pull origin main
+
+            echo "🐍 Updating start script with config..."
+            cat > start_bot.sh << EOF
+            #!/bin/bash
+            cd /home/ec2-user/wheeler
+            source .venv/bin/activate
+            export PYTHONPATH="/home/ec2-user/wheeler:\$PYTHONPATH"
+            eval \$(python3 -c "
+            import boto3, json
+            client = boto3.client('secretsmanager', region_name='us-east-1')
+            secret = json.loads(client.get_secret_value(SecretId='wheeler_paper')['SecretString'])
+            for k,v in secret.items(): print(f'export {k}=\"{v}\"')
+            ")
+            exec python3 src/main.py --config $CONFIG
+            EOF
+            chmod +x start_bot.sh
+
             echo "🐍 Activating virtualenv..."
             source .venv/bin/activate
             echo "📦 Installing dependencies..."
@@ -54,4 +86,4 @@ jobs:
             sleep 2
             echo "✅ Checking status..."
             sudo systemctl is-active wheeler
-            echo "🎉 Deployed successfully!"
+            echo "🎉 Deployed with config: $CONFIG"
