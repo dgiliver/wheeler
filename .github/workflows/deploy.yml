@@ -39,10 +39,19 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
+          command_timeout: 5m
           script: |
+            set -e
             cd ~/wheeler
+            echo "📥 Pulling latest code..."
             git pull origin main
+            echo "🐍 Activating virtualenv..."
             source .venv/bin/activate
-            pip install -r requirements.txt
+            echo "📦 Installing dependencies..."
+            pip install -q -r requirements.txt
+            echo "🔄 Restarting bot..."
             sudo systemctl restart wheeler
-            echo "✅ Deployed successfully!"
+            sleep 2
+            echo "✅ Checking status..."
+            sudo systemctl is-active wheeler
+            echo "🎉 Deployed successfully!"
