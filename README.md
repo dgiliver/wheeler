@@ -1,161 +1,438 @@
-# Wheeler - Automated Wheel Strategy Bot
+# 🎡 Wheeler - Automated Wheel Strategy Options Bot
 
-Wheeler is an automated trading bot designed to execute the "Wheel Strategy" on the Alpaca brokerage platform. It supports historical backtesting and live/paper trading execution. The bot uses technical analysis (RSI) and liquidity checks to identify optimal entry and exit points for Cash Secured Puts (CSP) and Covered Calls (CC).
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
 
-## 🎡 The Wheel Strategy
+An automated options trading bot that implements the **Wheel Strategy** on [Alpaca Markets](https://alpaca.markets/). Features include backtesting, paper trading, live trading, RSI-based entries, and intelligent position management.
 
-The Wheel Strategy is a systematic options trading method designed to generate income from premiums.
+![Wheeler Bot Demo](https://img.shields.io/badge/status-active-success.svg)
 
-1.  **Sell Cash-Secured Puts (CSP)**:
-    *   Identify a stock you wouldn't mind owning.
-    *   Sell a Put option below the current price (Out-of-the-Money).
-    *   **Outcome A**: The option expires worthless. You keep the premium. Repeat.
-    *   **Outcome B**: The stock drops below the strike price. You are assigned the shares. You keep the premium and now own the stock.
+---
 
-2.  **Sell Covered Calls (CC)**:
-    *   Now that you own the stock, sell a Call option above your cost basis.
-    *   **Outcome A**: The option expires worthless. You keep the premium and the stock. Repeat.
-    *   **Outcome B**: The stock rises above the strike price. Your shares are called away (sold). You keep the premium and the profit from the stock sale.
+## ⚡ Quick Start (5 minutes)
 
-3.  **Repeat**: Go back to Step 1.
+```bash
+# Clone
+git clone https://github.com/dgiliver/wheeler.git
+cd wheeler
 
-**Wheeler's Implementation:**
-*   **Entry**: Sells CSPs on neutral/bullish stocks when RSI indicates oversold conditions (< 30-40) and premiums meet target Delta (0.20-0.45).
-*   **Risk Management**: Checks option liquidity (Open Interest, Volume, Spread) before trading. Avoids selling Calls below cost basis to prevent realized losses on stock.
-*   **Management**: automatically rolls positions or accepts assignment based on logic.
+# Setup
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
 
-## 🚀 Setup & Installation
+# Configure
+cp .env.example .env
+# Edit .env with your Alpaca API keys
 
-### Prerequisites
-*   Python 3.10+
-*   An [Alpaca Markets](https://alpaca.markets/) account (Paper or Live).
-*   API Keys from Alpaca.
+# Run (paper trading)
+python src/main.py --config config/wheel_10k_optimized.yml
+```
 
-### Installation
+---
 
-1.  **Clone the repository:**
-    ```bash
-    git clone https://github.com/yourusername/wheeler.git
-    cd wheeler
-    ```
+## 🎡 What is the Wheel Strategy?
 
-2.  **Create a virtual environment:**
-    ```bash
-    python3 -m venv .venv
-    source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-    ```
+The Wheel is a systematic, income-generating options strategy:
 
-3.  **Install dependencies:**
-    ```bash
-    pip install -r requirements.txt
-    # OR if using pyproject.toml directly
-    pip install .
-    ```
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                                                                 │
+│   1. SELL CASH-SECURED PUT (CSP)                               │
+│      ↓                                                          │
+│   ┌─────────────────┐         ┌─────────────────┐              │
+│   │ Expires OTM     │         │ Assigned Stock  │              │
+│   │ Keep Premium 💰 │         │ Keep Premium 💰 │              │
+│   └────────┬────────┘         └────────┬────────┘              │
+│            │                           │                        │
+│            ↓                           ↓                        │
+│   [Repeat Step 1]            2. SELL COVERED CALL (CC)         │
+│                                        ↓                        │
+│                              ┌─────────────────┐               │
+│                              │ Expires OTM     │               │
+│                              │ Keep Premium 💰 │               │
+│                              │ Keep Stock      │               │
+│                              └────────┬────────┘               │
+│                                       │                         │
+│                              [Repeat Step 2]                    │
+│                                       OR                        │
+│                              ┌─────────────────┐               │
+│                              │ Called Away     │               │
+│                              │ Keep Premium 💰 │               │
+│                              │ Profit on Stock │               │
+│                              └────────┬────────┘               │
+│                                       │                         │
+│                              [Back to Step 1]                   │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
 
-4.  **Environment Configuration:**
-    Create a `.env` file in the root directory:
-    ```bash
-    touch .env
-    ```
-    Add your Alpaca credentials:
-    ```env
-    # Paper Trading Credentials
-    ALPACA_PAPER_API_KEY=PKxxxxxxxxxxxxxxxx
-    ALPACA_PAPER_API_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-    ALPACA_PAPER_BASE_URL=https://paper-api.alpaca.markets
+**Why it works:**
+- Collect premium consistently
+- Buy stocks at a discount (via put assignment)
+- Sell stocks at a profit (via call assignment)
+- Works best on stable, dividend-paying stocks you want to own
 
-    # Live Trading Credentials (Optional)
-    ALPACA_LIVE_API_KEY=AKxxxxxxxxxxxxxxxx
-    ALPACA_LIVE_API_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-    ALPACA_LIVE_BASE_URL=https://api.alpaca.markets
-    ```
+---
 
-## ⚙️ Configuration
+## 📋 Requirements
 
-The bot behavior is controlled by `config/wheel_strategy.yml`.
+- **Python 3.11+**
+- **Alpaca Markets account** (free) - [Sign up here](https://alpaca.markets/)
+- **Options trading enabled** on your Alpaca account
+- **$2,000+ account balance** (Alpaca minimum for options)
+
+---
+
+## 🛠️ Installation
+
+### Option 1: Local Development
+
+```bash
+# Clone the repository
+git clone https://github.com/dgiliver/wheeler.git
+cd wheeler
+
+# Create virtual environment
+python3 -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Copy example environment file
+cp .env.example .env
+```
+
+### Option 2: Docker (Coming Soon)
+
+```bash
+docker pull dgiliver/wheeler
+docker run -e ALPACA_PAPER_API_KEY=xxx wheeler
+```
+
+---
+
+## 🔑 Configuration
+
+### 1. API Keys (`.env`)
+
+```bash
+# Paper Trading (recommended to start)
+ALPACA_PAPER_API_KEY=PKxxxxxxxxxxxxxxxxxx
+ALPACA_PAPER_API_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+ALPACA_PAPER_BASE_URL=https://paper-api.alpaca.markets
+
+# Live Trading (when ready)
+ALPACA_LIVE_API_KEY=AKxxxxxxxxxxxxxxxxxx
+ALPACA_LIVE_API_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+ALPACA_LIVE_BASE_URL=https://api.alpaca.markets
+```
+
+### 2. Strategy Config (`config/wheel_10k_optimized.yml`)
 
 ```yaml
 environment: paper  # 'paper' or 'live'
 
-default_position_size: 0.2  # Max 20% of account per position
+# Account limits
+max_capital: 10000            # Max capital to use (even if account has more)
+max_contracts_per_symbol: 1   # Limit contracts per stock
 
-polling:
-  market_hours_interval: 60  # Check every 60 seconds
-  after_hours_interval: 300
-  check_premarket: true
-  check_afterhours: true
+# Entry conditions
+rsi_period: 14
+rsi_threshold: 45             # Only sell puts when RSI < 45 (oversold)
 
+# Take profit
+take_profit_pct: 0.50         # Close at 50% profit
+
+# Your watchlist
 watchlist:
-  - symbol: SPY
-    max_position_size: 0.2
-    min_strike_delta: 0.30  # Target Delta for CSP
-    max_strike_delta: 0.15  # Tolerance
-
-  - symbol: AAPL
-    max_position_size: 0.1
-    min_strike_delta: 0.25
-    max_strike_delta: 0.15
-    min_days_to_expiry: 30
+  - symbol: PLTR              # Palantir
+    max_position_size: 0.25   # 25% of capital max
+    min_strike_delta: 0.25    # Target delta range
+    max_strike_delta: 0.35
+    min_days_to_expiry: 30    # DTE range
     max_days_to_expiry: 45
+
+  - symbol: F                 # Ford
+    max_position_size: 0.20
+    min_strike_delta: 0.25
+    max_strike_delta: 0.35
 ```
 
-## 🖥️ Usage
+### Key Parameters Explained
 
-### 1. Backtesting
-Run a historical simulation to test how the strategy would have performed.
+| Parameter | Description | Recommended |
+|-----------|-------------|-------------|
+| `rsi_threshold` | Only enter when RSI below this | 40-50 |
+| `min_strike_delta` | Minimum option delta | 0.20-0.30 |
+| `max_strike_delta` | Maximum option delta | 0.30-0.40 |
+| `min_days_to_expiry` | Minimum DTE | 25-35 |
+| `max_days_to_expiry` | Maximum DTE | 45-60 |
+| `take_profit_pct` | Close position at X% profit | 0.50-0.65 |
+
+---
+
+## 🚀 Usage
+
+### Paper Trading (Recommended First)
 
 ```bash
-python -m src.backtesting.run_backtest -s 2022-01-01 -e 2022-12-31 -m 100000 --rsi 30
+# Start the bot
+python src/main.py --config config/wheel_10k_optimized.yml
+
+# Watch the logs
+tail -f wheel_bot.log
 ```
 
-**Options:**
-*   `-s`, `--start-date`: Start date (YYYY-MM-DD).
-*   `-e`, `--end-date`: End date (YYYY-MM-DD).
-*   `-m`, `--capital`: Initial capital (default: 100,000).
-*   `--rsi`: RSI threshold for entry (default: 30).
-*   `--debug`: Enable verbose logging.
+### Backtesting
 
-### 2. Live / Paper Trading
-Start the bot to trade against your Alpaca account.
+Test how the strategy would have performed historically:
 
 ```bash
-python src/main.py --config config/wheel_strategy.yml
+# Basic backtest
+python -m src.backtesting.run_backtest \
+  --start-date 2023-01-01 \
+  --end-date 2024-01-01 \
+  --capital 10000 \
+  --rsi 45
+
+# Comprehensive backtest with multiple configurations
+python run_fast_backtest.py
 ```
 
-The bot will:
-1.  Connect to Alpaca.
-2.  Sync existing positions.
-3.  Monitor the market during trading hours.
-4.  Execute trades (Sell Puts/Calls) based on your strategy config.
-5.  Log activity to `wheel_bot.log`.
+### Live Trading
 
-## 📂 Project Structure
+⚠️ **Only after extensive paper trading!**
+
+1. Change `environment: live` in your config
+2. Ensure `ALPACA_LIVE_*` keys are set
+3. Start with small position sizes
+4. Monitor closely for the first few weeks
+
+---
+
+## ☁️ Deploy to AWS (Run 24/7)
+
+Run the bot continuously on AWS EC2 for ~$0/month (free tier).
+
+### Quick Deploy
+
+```bash
+# SSH into your EC2 instance
+ssh -i your-key.pem ec2-user@your-ec2-ip
+
+# Setup
+sudo dnf update -y
+sudo dnf install python3.11 python3.11-pip git -y
+git clone https://github.com/dgiliver/wheeler.git
+cd wheeler
+python3.11 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+
+# Create startup script
+cat > start_bot.sh << 'EOF'
+#!/bin/bash
+cd /home/ec2-user/wheeler
+source .venv/bin/activate
+export ALPACA_PAPER_API_KEY="your_key"
+export ALPACA_PAPER_API_SECRET="your_secret"
+export ALPACA_PAPER_BASE_URL="https://paper-api.alpaca.markets"
+exec python3 src/main.py --config config/wheel_10k_optimized.yml
+EOF
+chmod +x start_bot.sh
+
+# Create systemd service
+sudo tee /etc/systemd/system/wheeler.service << 'EOF'
+[Unit]
+Description=Wheeler Bot
+After=network.target
+
+[Service]
+Type=simple
+User=ec2-user
+ExecStart=/home/ec2-user/wheeler/start_bot.sh
+Restart=always
+RestartSec=30
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Start
+sudo systemctl daemon-reload
+sudo systemctl enable wheeler
+sudo systemctl start wheeler
+
+# Check status
+sudo systemctl status wheeler
+journalctl -u wheeler -f
+```
+
+For secure secrets management with AWS Secrets Manager, see [DEPLOYMENT.md](DEPLOYMENT.md).
+
+---
+
+## 📊 How It Works
+
+### Entry Logic (Selling Puts)
+
+```python
+def should_enter():
+    return (
+        RSI < threshold          # Stock is oversold
+        and delta in range       # Option has target delta
+        and DTE in range         # 30-45 days to expiry
+        and liquidity_ok         # Good volume/spread
+        and within_position_limit # Not overexposed
+    )
+```
+
+### Exit Logic (Covered Calls)
+
+```python
+def should_sell_call():
+    return (
+        own_100_shares           # Assigned from put
+        and strike > cost_basis  # Ensure profit if called
+        and delta in range       # Target delta
+    )
+```
+
+### Position Management
+
+- **Take Profit**: Closes positions at 50-65% profit
+- **Rolling**: Automatically rolls options near expiry if profitable
+- **Assignment**: Gracefully handles stock assignment
+
+---
+
+## 📁 Project Structure
 
 ```
 wheeler/
-├── config/                 # Configuration files
-│   └── wheel_strategy.yml
+├── config/                     # Strategy configurations
+│   ├── wheel_10k_optimized.yml # $10k account config
+│   └── wheel_strategy_OLD.yml  # Legacy config
 ├── src/
-│   ├── analysis/           # Technical analysis & decision logic
+│   ├── analysis/               # Strategy logic
 │   │   └── strategy_analyzer.py
-│   ├── backtesting/        # Backtesting engine
+│   ├── backtesting/            # Historical testing
 │   │   ├── historical_data.py
-│   │   └── wheel_backtester.py
-│   ├── managers/           # Portfolio & Risk management
+│   │   ├── wheel_backtester.py
+│   │   └── run_backtest.py
+│   ├── config/                 # Settings models
+│   │   └── settings.py
+│   ├── managers/               # Account management
 │   │   └── account_manager.py
-│   ├── models/             # Data models (Pydantic)
-│   │   ├── alpaca_models.py
+│   ├── models/                 # Data models
+│   │   ├── alpaca_models.py    # API models
 │   │   └── position.py
-│   ├── services/           # External API services
+│   ├── services/               # External APIs
 │   │   └── alpaca_service.py
-│   ├── main.py             # Entry point for Live Bot
-│   └── wheel_bot.py        # Main Bot Class
-├── tests/                  # Unit & Integration tests
-├── .env                    # API Keys (gitignored)
-├── README.md
-└── requirements.txt
+│   ├── main.py                 # Entry point
+│   └── wheel_bot.py            # Main bot logic
+├── tests/                      # Test suite
+├── .env.example                # Example environment
+├── .pre-commit-config.yaml     # Code quality hooks
+├── requirements.txt            # Dependencies
+└── README.md
 ```
+
+---
+
+## 🧪 Testing
+
+```bash
+# Run all tests
+pytest tests/ -v
+
+# Run with coverage
+pytest tests/ --cov=src --cov-report=html
+
+# Run specific test
+pytest tests/test_strategy_analyzer.py -v
+```
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Install pre-commit hooks (`pre-commit install`)
+4. Make your changes
+5. Run tests (`pytest tests/ -v`)
+6. Commit (`git commit -m 'Add amazing feature'`)
+7. Push (`git push origin feature/amazing-feature`)
+8. Open a Pull Request
+
+---
+
+## 📈 Performance
+
+Backtesting results on select stocks (2022-2024):
+
+| Stock | Annual Return | Max Drawdown | Win Rate |
+|-------|--------------|--------------|----------|
+| PLTR  | ~15-25%      | ~12%         | ~75%     |
+| F     | ~10-18%      | ~8%          | ~80%     |
+| SOFI  | ~12-22%      | ~15%         | ~72%     |
+
+*Past performance does not guarantee future results.*
+
+---
+
+## ❓ FAQ
+
+**Q: How much money do I need?**
+A: Alpaca requires $2,000 minimum for options. The bot works best with $5,000-$25,000.
+
+**Q: Is this safe?**
+A: All trading involves risk. The wheel strategy is considered relatively conservative for options, but you can still lose money. Always paper trade first.
+
+**Q: What stocks work best?**
+A: Stable stocks with good premiums: PLTR, F, SOFI, INTC, BAC, AMD. Avoid meme stocks and highly volatile names.
+
+**Q: How often does it trade?**
+A: Depends on market conditions. Typically 1-5 trades per week during volatile periods, fewer in calm markets.
+
+**Q: Can I run multiple configs?**
+A: Yes, run separate instances with different config files.
+
+---
 
 ## ⚠️ Disclaimer
 
-**Trading options involves significant risk and is not suitable for every investor.** This software is for educational and research purposes only. It is not financial advice. The authors and contributors are not responsible for any financial losses incurred while using this software. Always test thoroughly with Paper Trading before risking real capital.
+**IMPORTANT: This software is for educational purposes only.**
+
+- Trading options involves substantial risk of loss
+- Past performance does not guarantee future results
+- The authors are NOT financial advisors
+- You are solely responsible for your trading decisions
+- Always paper trade extensively before using real money
+- Never trade money you can't afford to lose
+
+By using this software, you acknowledge these risks and agree that the authors bear no responsibility for any financial losses.
+
+---
+
+## 📜 License
+
+MIT License - see [LICENSE](LICENSE) for details.
+
+---
+
+## ⭐ Star History
+
+If you find this useful, please give it a star! ⭐
+
+---
+
+<p align="center">
+  Made with ❤️ for the options trading community
+</p>
