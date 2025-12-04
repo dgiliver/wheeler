@@ -90,7 +90,7 @@ watchlist:
     max_position_size: 0.2
     min_strike_delta: 0.30  # Target Delta for CSP
     max_strike_delta: 0.15  # Tolerance
-  
+
   - symbol: AAPL
     max_position_size: 0.1
     min_strike_delta: 0.25
@@ -159,4 +159,3 @@ wheeler/
 ## ⚠️ Disclaimer
 
 **Trading options involves significant risk and is not suitable for every investor.** This software is for educational and research purposes only. It is not financial advice. The authors and contributors are not responsible for any financial losses incurred while using this software. Always test thoroughly with Paper Trading before risking real capital.
-

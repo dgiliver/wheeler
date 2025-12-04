@@ -1,3 +1,3 @@
-from .settings import AlpacaConfig, StockConfig, PollingConfig, PDTConfig
- 
-__all__ = ['AlpacaConfig', 'StockConfig', 'PollingConfig', 'PDTConfig'] 
+from .settings import AlpacaConfig, PDTConfig, PollingConfig, StockConfig
+
+__all__ = ["AlpacaConfig", "StockConfig", "PollingConfig", "PDTConfig"]

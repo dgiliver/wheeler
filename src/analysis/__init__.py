@@ -1,3 +1,3 @@
 from .strategy_analyzer import StrategyAnalyzer
- 
-__all__ = ['StrategyAnalyzer'] 
+
+__all__ = ["StrategyAnalyzer"]

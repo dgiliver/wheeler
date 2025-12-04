@@ -1,3 +1,3 @@
-from .position import Position, PositionType, OptionQuote
- 
-__all__ = ['Position', 'PositionType', 'OptionQuote'] 
+from .position import OptionQuote, Position, PositionType
+
+__all__ = ["Position", "PositionType", "OptionQuote"]

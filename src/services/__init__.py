@@ -1,3 +1,3 @@
 from .alpaca_service import AlpacaService
- 
-__all__ = ['AlpacaService'] 
+
+__all__ = ["AlpacaService"]

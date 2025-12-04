@@ -1,19 +1,18 @@
-import pytest
 from decimal import Decimal
-from src.config.settings import StockConfig, AlpacaConfig
+
+from src.config.settings import AlpacaConfig, StockConfig
+
 
 def test_stock_config_defaults():
-    config = StockConfig(
-        symbol="AAPL",
-        max_position_size=Decimal("0.1")
-    )
-    
+    config = StockConfig(symbol="AAPL", max_position_size=Decimal("0.1"))
+
     assert config.symbol == "AAPL"
     assert config.max_position_size == Decimal("0.1")
     assert config.min_strike_delta == 0.3
     assert config.max_strike_delta == 0.15
     assert config.min_days_to_expiry == 30
     assert config.max_days_to_expiry == 45
+
 
 def test_stock_config_custom_values():
     config = StockConfig(
@@ -22,9 +21,9 @@ def test_stock_config_custom_values():
         min_strike_delta=0.25,
         max_strike_delta=0.1,
         min_days_to_expiry=45,
-        max_days_to_expiry=60
+        max_days_to_expiry=60,
     )
-    
+
     assert config.symbol == "SPY"
     assert config.max_position_size == Decimal("0.2")
     assert config.min_strike_delta == 0.25
@@ -32,17 +31,15 @@ def test_stock_config_custom_values():
     assert config.min_days_to_expiry == 45
     assert config.max_days_to_expiry == 60
 
+
 def test_alpaca_config():
     watchlist = [
         StockConfig(symbol="AAPL", max_position_size=Decimal("0.1")),
-        StockConfig(symbol="SPY", max_position_size=Decimal("0.15"))
+        StockConfig(symbol="SPY", max_position_size=Decimal("0.15")),
     ]
-    
-    config = AlpacaConfig(
-        environment="paper",
-        watchlist=watchlist
-    )
-    
+
+    config = AlpacaConfig(environment="paper", watchlist=watchlist)
+
     assert config.environment == "paper"
     assert len(config.watchlist) == 2
-    assert config.default_position_size == 0.2  # Default value 
+    assert config.default_position_size == 0.2  # Default value

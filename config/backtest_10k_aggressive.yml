@@ -8,22 +8,22 @@ watchlist:
     max_position_size: 0.7
     min_strike_delta: 0.30
     max_strike_delta: 0.40
-    
+
   - symbol: SOFI
     max_position_size: 0.15
     min_strike_delta: 0.30
     max_strike_delta: 0.40
-    
+
   - symbol: F
     max_position_size: 0.15
     min_strike_delta: 0.30
     max_strike_delta: 0.40
-    
+
   - symbol: INTC
     max_position_size: 0.25
     min_strike_delta: 0.30
     max_strike_delta: 0.40
-    
+
   - symbol: BAC
     max_position_size: 0.45
     min_strike_delta: 0.30
@@ -34,4 +34,3 @@ default_position_size: 0.25
 polling:
   market_hours_interval: 60
   after_hours_interval: 300
-

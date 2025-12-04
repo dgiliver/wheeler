@@ -29,4 +29,4 @@ python-dateutil>=2.8.2
 # CLI & Data Processing
 click>=8.1.7  # Added for CLI interface
 scipy>=1.12.0  # Added for financial calculations
-pandas-market-calendars>=4.3.1  # Added for market calendar 
+pandas-market-calendars>=4.3.1  # Added for market calendar

@@ -18,7 +18,7 @@ watchlist:
   # Delta range: min_strike_delta is the LOWER bound, max_strike_delta is the UPPER bound
   # For puts, delta is negative (-0.30 means 30 delta put), we use absolute values
   # Position sizes set to afford 1 contract at typical strike prices
-    
+
   - symbol: "AMD"
     max_position_size: 0.30   # ~$25k for 1 contract at $210 strike
     min_strike_delta: 0.20
@@ -35,4 +35,3 @@ watchlist:
     max_days_to_expiry: 28
     take_profit_pct: 50.0
     is_high_iv: true
-    
