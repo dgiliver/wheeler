@@ -10,11 +10,11 @@ on:
       config:
         description: 'Config file to use'
         required: false
-        default: 'config/wheel_10k_paper.yml'
+        default: 'config/wheel_30k_aggressive.yml'
 
 # Default config - change this to switch configs
 env:
-  WHEELER_CONFIG: config/wheel_10k_paper.yml
+  WHEELER_CONFIG: config/wheel_30k_aggressive.yml
 
 jobs:
   test:
@@ -55,7 +55,7 @@ jobs:
             cd ~/wheeler
 
             # Use input config if provided, otherwise use env default
-            CONFIG="${WHEELER_CONFIG:-config/wheel_10k_paper.yml}"
+            CONFIG="${WHEELER_CONFIG:-config/wheel_30k_aggressive.yml}"
             echo "📋 Using config: $CONFIG"
 
             echo "📥 Pulling latest code..."

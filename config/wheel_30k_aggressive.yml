@@ -1,0 +1,85 @@
+# Aggressive Wheel Strategy Config for $30K Account
+# Higher delta = higher premium but higher assignment risk
+# RSI 50 allows more entry opportunities
+
+environment: paper
+
+# CAPITAL LIMIT - Trading with $30k of your Alpaca balance
+max_capital: 30000
+
+max_contracts_per_symbol: 1
+
+# RSI threshold - 50 for more aggressive entries
+rsi_threshold: 50
+
+# Take profit at 60% of max profit (lock in gains faster)
+take_profit_pct: 0.60
+
+watchlist:
+  # PLTR - Palantir (~$70) - High IV tech stock
+  # Capital required: ~$7,000 per contract
+  - symbol: PLTR
+    max_position_size: 0.25
+    min_strike_delta: 0.30
+    max_strike_delta: 0.40
+    min_days_to_expiry: 20
+    max_days_to_expiry: 40
+    is_high_iv: true
+
+  # SOFI - SoFi (~$15) - Fintech, affordable entry
+  # Capital required: ~$1,500 per contract
+  - symbol: SOFI
+    max_position_size: 0.10
+    min_strike_delta: 0.30
+    max_strike_delta: 0.40
+    min_days_to_expiry: 20
+    max_days_to_expiry: 40
+    is_high_iv: true
+
+  # F - Ford (~$11) - Auto, very affordable
+  # Capital required: ~$1,100 per contract
+  - symbol: F
+    max_position_size: 0.08
+    min_strike_delta: 0.30
+    max_strike_delta: 0.40
+    min_days_to_expiry: 25
+    max_days_to_expiry: 40
+    is_high_iv: false
+
+  # INTC - Intel (~$24) - Beaten down semis, good premiums
+  # Capital required: ~$2,400 per contract
+  - symbol: INTC
+    max_position_size: 0.15
+    min_strike_delta: 0.30
+    max_strike_delta: 0.40
+    min_days_to_expiry: 20
+    max_days_to_expiry: 40
+    is_high_iv: true
+
+  # BAC - Bank of America (~$47) - Stable bank
+  # Capital required: ~$4,700 per contract
+  - symbol: BAC
+    max_position_size: 0.18
+    min_strike_delta: 0.30
+    max_strike_delta: 0.40
+    min_days_to_expiry: 25
+    max_days_to_expiry: 40
+    is_high_iv: false
+
+  # AMD - AMD (~$135) - High premium semis
+  # Capital required: ~$13,500 per contract
+  - symbol: AMD
+    max_position_size: 0.50
+    min_strike_delta: 0.30
+    max_strike_delta: 0.40
+    min_days_to_expiry: 20
+    max_days_to_expiry: 40
+    is_high_iv: true
+
+default_position_size: 0.20
+
+polling:
+  market_hours_interval: 60
+  after_hours_interval: 300
+  check_premarket: false
+  check_afterhours: false
