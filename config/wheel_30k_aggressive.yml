@@ -7,8 +7,7 @@ environment: paper
 # CAPITAL LIMIT - Trading with $30k of your Alpaca balance
 max_capital: 30000
 
-# Allow 2 contracts per symbol with more capital
-max_contracts_per_symbol: 2
+max_contracts_per_symbol: 1
 
 # RSI threshold - 50 for more aggressive entries
 rsi_threshold: 50
