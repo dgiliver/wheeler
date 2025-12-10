@@ -1,74 +1,83 @@
-# Optimized Wheel Strategy Config for $10K Account
-# Based on comprehensive backtest results (2023-2024)
-# Best performing: Moderate delta (0.25-0.35) + RSI 45
+# Aggressive Wheel Strategy Config for $30K Account
+# Higher delta = higher premium but higher assignment risk
+# RSI 50 allows more entry opportunities
 
 environment: paper
 
-# CAPITAL LIMIT - Use this instead of full Alpaca balance
-# Set to your desired trading capital (even if Alpaca has more)
-max_capital: 10000
+# CAPITAL LIMIT - Trading with $30k of your Alpaca balance
+max_capital: 30000
 
-# Maximum contracts per symbol (safety limit)
-max_contracts_per_symbol: 1
+# Allow 2 contracts per symbol with more capital
+max_contracts_per_symbol: 2
 
-# RSI threshold - 45 allows more entries in trending markets
-rsi_threshold: 45
+# RSI threshold - 50 for more aggressive entries
+rsi_threshold: 50
 
-# Take profit at 50% of max profit
-take_profit_pct: 0.50
+# Take profit at 60% of max profit (lock in gains faster)
+take_profit_pct: 0.60
 
 watchlist:
   # PLTR - Palantir (~$70) - High IV tech stock
-  # Capital required: ~$7,000 for 100 shares
+  # Capital required: ~$7,000 per contract
   - symbol: PLTR
-    max_position_size: 0.70
-    min_strike_delta: 0.25
-    max_strike_delta: 0.35
-    min_days_to_expiry: 25
-    max_days_to_expiry: 45
+    max_position_size: 0.25
+    min_strike_delta: 0.30
+    max_strike_delta: 0.40
+    min_days_to_expiry: 20
+    max_days_to_expiry: 40
     is_high_iv: true
 
   # SOFI - SoFi (~$15) - Fintech, affordable entry
-  # Capital required: ~$1,500 for 100 shares
+  # Capital required: ~$1,500 per contract
   - symbol: SOFI
-    max_position_size: 0.15
-    min_strike_delta: 0.25
-    max_strike_delta: 0.35
-    min_days_to_expiry: 25
-    max_days_to_expiry: 45
+    max_position_size: 0.10
+    min_strike_delta: 0.30
+    max_strike_delta: 0.40
+    min_days_to_expiry: 20
+    max_days_to_expiry: 40
     is_high_iv: true
 
   # F - Ford (~$11) - Auto, very affordable
-  # Capital required: ~$1,100 for 100 shares
+  # Capital required: ~$1,100 per contract
   - symbol: F
-    max_position_size: 0.12
-    min_strike_delta: 0.25
-    max_strike_delta: 0.35
-    min_days_to_expiry: 30
-    max_days_to_expiry: 45
+    max_position_size: 0.08
+    min_strike_delta: 0.30
+    max_strike_delta: 0.40
+    min_days_to_expiry: 25
+    max_days_to_expiry: 40
     is_high_iv: false
 
   # INTC - Intel (~$24) - Beaten down semis, good premiums
-  # Capital required: ~$2,400 for 100 shares
+  # Capital required: ~$2,400 per contract
   - symbol: INTC
-    max_position_size: 0.25
-    min_strike_delta: 0.25
-    max_strike_delta: 0.35
-    min_days_to_expiry: 25
-    max_days_to_expiry: 45
+    max_position_size: 0.15
+    min_strike_delta: 0.30
+    max_strike_delta: 0.40
+    min_days_to_expiry: 20
+    max_days_to_expiry: 40
     is_high_iv: true
 
   # BAC - Bank of America (~$47) - Stable bank
-  # Capital required: ~$4,700 for 100 shares
+  # Capital required: ~$4,700 per contract
   - symbol: BAC
-    max_position_size: 0.48
-    min_strike_delta: 0.20
-    max_strike_delta: 0.30
-    min_days_to_expiry: 30
-    max_days_to_expiry: 45
+    max_position_size: 0.18
+    min_strike_delta: 0.30
+    max_strike_delta: 0.40
+    min_days_to_expiry: 25
+    max_days_to_expiry: 40
     is_high_iv: false
 
-default_position_size: 0.25
+  # AMD - AMD (~$135) - High premium semis
+  # Capital required: ~$13,500 per contract
+  - symbol: AMD
+    max_position_size: 0.50
+    min_strike_delta: 0.30
+    max_strike_delta: 0.40
+    min_days_to_expiry: 20
+    max_days_to_expiry: 40
+    is_high_iv: true
+
+default_position_size: 0.20
 
 polling:
   market_hours_interval: 60
